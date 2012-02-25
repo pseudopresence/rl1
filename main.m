@@ -10,6 +10,7 @@ Actions = [
     -1  0; % 3 W < 
      0 +1; % 4 N ^
 ]';
+NActions = size(Actions, 2);
 
 Rot90 = [
      0 +1;
@@ -18,6 +19,8 @@ Rot90 = [
 
 MapWidth = 8;
 MapHeight = 8;
+NStates = MapWidth * MapHeight;
+GoalState = 64;
 
 stateFromPos = @(P) (P(1) - 1) + MapWidth * (P(2) - 1) + 1;
 posFromState = @(S) [mod((S - 1),MapWidth) + 1, floor((S - 1)/MapWidth) + 1];
@@ -69,10 +72,10 @@ for A = 2:4
     end
 end
 % [State x Action] -> State
-StateTransitions = zeros([MapWidth * MapHeight, size(Actions, 2)]);
+StateTransitions = zeros([NStates, NActions]);
 
-for A = 1:size(Actions, 2)
-    for S = 1:size(StateTransitions, 1)
+for A = 1:NActions
+    for S = 1:NStates
         P = posFromState(S);
         
         X = P(1);
@@ -91,11 +94,22 @@ for A = 1:size(Actions, 2)
             WE = [Walls_H(W, 1) Walls_H(W, 3)];
             MoveOK = MoveOK & ~testSegmentSegment(P, NP, WS, WE);
         end
+        
         if (MoveOK)
             StateTransitions(S, A) = stateFromPos(NP);
-            drawArrow(Arrow, P, A);
         else
             StateTransitions(S, A) = S;
+        end
+    end
+end
+
+StateTransitions(GoalState, :) = repmat(GoalState, [NActions 1]);
+
+for A = 1:NActions
+    for S = 1:NStates
+        P = posFromState(S);
+        if (StateTransitions(S, A) ~= S)
+            drawArrow(Arrow, P, A);
         end
     end
 end
@@ -113,7 +127,7 @@ StartPolicy = [
     3 2 4 2 1 2 4 1 ...
     3 2 3 3 3 2 3 4 ...
     3 2 1 1 3 3 2 4 ...
-    3 2 1 1 3 3 2 0
+    3 2 1 1 3 3 2 4
 ];
 
 % Glyphs for rendering policies
@@ -147,10 +161,9 @@ for X = 1:MapWidth;
     end
 end
 
+%% visualisation for grid world with walls
+%% visualisation for policies, showing arrow for direction
 
-
-%% TODO - visualisation for grid world with walls
-%% TODO - visualisation for policies, showing arrow for direction
 %% TODO - visualisation for state-value function
 %% TODO - implement state transition probs PP(a, s, s') as a function that
 %% PP(s, a) -> [States, Probs]; a list of non-zero next states and their
@@ -158,5 +171,59 @@ end
 %% distribution
 
 %% Part I - gridworld, dynamic programming
+
+Policy = StartPolicy;
+V = zeros([NStates, 1]);
+reward = @(S, A, S2) -1 * (S2 ~= GoalState);
+
+% Evaluate policy
+MaxIterations = 1000;
+Discount = 1;
+for Iteration = 1:MaxIterations
+    MaxDelta = 0;
+    NV = zeros([NStates, 1]);
+    for S = 1:NStates
+        A = Policy(S);
+        S2 = StateTransitions(S, A);
+        P = posFromState(S);
+        if (S == 47)
+            fprintf('boop');
+        end
+        NV(S) = reward(S, A, S2) + Discount * V(S2);
+        
+        MaxDelta = max(MaxDelta, abs(V(S) - NV(S)));
+        % V(S) = NV;
+    end
+    MaxDelta
+    V = NV;
+end
+% TODO ugh
+V2D = reshape(V, [MapWidth MapHeight])';
+V2D = flipdim(V2D, 1);
+figure;
+imagesc(V2D);
+
+% Compute greedy policy
+NewPolicy = Policy;
+for S = 1:NStates
+    VA = zeros([NActions, 1]);
+    for A = 1:NActions;
+        S2 = StateTransitions(S, A);
+        VA(A) = V(S2);
+    end
+    [Dummy A] = max(VA);
+    NewPolicy(S) = A;
+end
+
+figure;
+axis([0.5, 8.5, 0.5, 8.5]);
+axis square;
+drawWalls();
+for X = 1:MapWidth;
+    for Y = 1:MapHeight;
+        S = stateFromPos([X, Y]);
+        drawAction(X, Y, NewPolicy(S));
+    end
+end
 
 %% Part II - secretary problem, MC, TD (Q-learning)
