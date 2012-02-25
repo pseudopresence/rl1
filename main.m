@@ -22,7 +22,8 @@ MapHeight = 8;
 stateFromPos = @(P) (P(1) - 1) + MapWidth * (P(2) - 1) + 1;
 posFromState = @(S) [mod((S - 1),MapWidth) + 1, floor((S - 1)/MapWidth) + 1];
 
-%% Walls - StartX, StartY, EndX, EndY
+%% Walls
+% TODO 'vertical' and 'horizontal' are the wrong way around
 % Vertical wall representation: Y, StartX, EndX
 Walls_V = [
     0.5, 0.5, 8.5;
@@ -73,16 +74,16 @@ StateTransitions = zeros([MapWidth * MapHeight, size(Actions, 2)]);
 for A = 1:size(Actions, 2)
     for S = 1:size(StateTransitions, 1)
         P = posFromState(S);
-
+        
         X = P(1);
         Y = P(2);
-        NP = Actions(A) + P;
+        NP = Actions(:,A)' + P;
         MoveOK = 1;
-
+        
         for W = 1:size(Walls_V, 1)
             WS = [Walls_V(W, 2) Walls_V(W, 1)];
             WE = [Walls_V(W, 3) Walls_V(W, 1)];
-            MoveOK = MoveOK &~ testSegmentSegment(P, NP, WS, WE);
+            MoveOK = MoveOK & ~testSegmentSegment(P, NP, WS, WE);
         end
         
         for W = 1:size(Walls_H, 1)

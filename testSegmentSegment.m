@@ -6,10 +6,15 @@ function [Coll] = testSegmentSegment(S1, E1, S2, E2)
   U = S2 - S1;
 
   % Might be negative!
-  Scale = D1(2) * D2(1) - D1(1) * D2(2);
+  Scale = D1(1) * D2(2) - D1(2) * D2(1);
 
+  if (Scale == 0)
+      Coll = 0;
+      return;
+  end
+  
   R = (U(1) * D2(2) - U(2) * D2(1)) / Scale;
   S = (U(1) * D1(2) - U(2) * D1(1)) / Scale;
 
-  Coll = (0 < R) & (R < 1) & (0 < S) & (S < 1);
+  Coll = (0 < R) && (R < 1) && (0 < S) && (S < 1);
 end
