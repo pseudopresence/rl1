@@ -120,14 +120,14 @@ end
 % Goal state action set to 0 so we get an error trying to take an action
 % from the goal state
 StartPolicy = [
-    3 4 4 4 4 4 4 1 ...
-    3 4 4 3 3 3 4 1 ...
-    3 4 4 2 4 1 4 1 ...
-    3 3 4 2 4 2 4 1 ...
-    3 2 4 2 1 2 4 1 ...
-    3 2 3 3 3 2 3 4 ...
-    3 2 1 1 3 3 2 4 ...
-    3 2 1 1 3 3 2 4
+    1 4 4 4 4 4 4 3 ...
+    1 4 4 1 1 1 4 3 ...
+    1 4 4 2 4 3 4 3 ...
+    1 1 4 2 4 2 4 3 ...
+    1 2 4 2 3 2 4 3 ...
+    1 2 1 1 1 2 1 4 ...
+    1 2 3 3 1 1 2 4 ...
+    1 2 3 3 1 1 2 4
 ];
 
 % Glyphs for rendering policies
@@ -138,13 +138,13 @@ StartPolicy = [
 ActionGlyphs(1, 1, :, :) = [-1 +1; -1 +1]';
 ActionGlyphs(2, 1, :, :) = [-1 +1; +1 -1]';
 % 1 E >
-ActionGlyphs(1, 2, :, :) = [+1 -1; +1 -1]';
+ActionGlyphs(1, 2, :, :) = [-1 +1; -1 +1]';
 ActionGlyphs(2, 2, :, :) = [+1  0; -1  0]';
 % 2 S V
 ActionGlyphs(1, 3, :, :) = [-1  0; +1  0]';
 ActionGlyphs(2, 3, :, :) = [+1 -1; +1 -1]';
 % 3 W < 
-ActionGlyphs(1, 4, :, :) = [-1 +1; -1 +1]';
+ActionGlyphs(1, 4, :, :) = [+1 -1; +1 -1]';
 ActionGlyphs(2, 4, :, :) = [+1  0; -1  0]';
 % 4 N ^
 ActionGlyphs(1, 5, :, :) = [-1  0; +1  0]';
@@ -186,16 +186,16 @@ for Iteration = 1:MaxIterations
         A = Policy(S);
         S2 = StateTransitions(S, A);
         P = posFromState(S);
-        if (S == 47)
-            fprintf('boop');
-        end
         NV(S) = reward(S, A, S2) + Discount * V(S2);
         
         MaxDelta = max(MaxDelta, abs(V(S) - NV(S)));
         % V(S) = NV;
     end
-    MaxDelta
     V = NV;
+    if (MaxDelta < 0.001)
+        fprintf('Iterations before convergence: %d\n', Iteration);
+        break;
+    end
 end
 % TODO ugh
 V2D = reshape(V, [MapWidth MapHeight])';
