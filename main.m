@@ -1,5 +1,9 @@
+clc;
+clear all;
+close all;
+
 %% Walls - StartX, StartY, EndX, EndY
-% Walls_V - Y, StartX, EndX
+% Vertical wall representation: Y, StartX, EndX
 Walls_V = [
     0.5, 0.5, 8.5;
     1.5, 0.5, 1.5;
@@ -9,7 +13,7 @@ Walls_V = [
     8.5, 0.5, 8.5
 ];
 
-% Walls_H - X, StartY, EndY
+% Horizontal wall representation: X, StartY, EndY
 Walls_H = [
     0.5, 0.5, 8.5;
     2.5, 4.5, 6.5;
@@ -20,29 +24,65 @@ Walls_H = [
     8.5, 0.5, 8.5
 ];
 
+drawWalls = @() drawWalls(Walls_V, Walls_H);
+
 figure;
-hold on;
 axis([0.5, 8.5, 0.5, 8.5]);
 axis square;
-for i = 1:size(Walls_V, 1)
-    Y      = Walls_V(i,1);
-    StartX = Walls_V(i,2);
-    EndX   = Walls_V(i,3);
-    
-    line([StartX EndX], [Y Y], 'Color', 'red');
-end
-for i = 1:size(Walls_H, 1)
-    X      = Walls_H(i,1);
-    StartY = Walls_H(i,2);
-    EndY   = Walls_H(i,3);
-    
-    line([X X], [StartY EndY], 'Color', 'red');
-end
-hold off;
+drawWalls();
+
+% TODO - compute state transition matrix from walls
 
 
 %% TODO - finish starting (non-optimal) policy on paper, make into table
 
+% Policy representation: [State] -> Action
+% Goal state action set to 0 so we get an error trying to take an action
+% from the goal state
+StartPolicy = [
+    4 1 1 1 1 1 1 3 ...
+    4 1 1 4 4 4 1 3 ...
+    4 1 1 2 1 3 1 3 ...
+    4 4 1 2 1 2 1 3 ...
+    4 2 1 2 3 2 1 3 ...
+    4 2 4 4 4 2 4 1 ...
+    4 2 3 3 4 4 2 1 ...
+    4 2 3 3 4 4 2 0
+];
+
+% Glyphs for rendering policies
+ActionGlyphs(1, 1, :, :) = [-1 +1; -1 +1]';
+ActionGlyphs(1, 2, :, :) = [-1  0; +1  0]';
+ActionGlyphs(1, 3, :, :) = [-1  0; +1  0]';
+ActionGlyphs(1, 4, :, :) = [+1 -1; +1 -1]';
+ActionGlyphs(1, 5, :, :) = [-1 +1; -1 +1]';
+ActionGlyphs(2, 1, :, :) = [-1 +1; +1 -1]';
+ActionGlyphs(2, 2, :, :) = [-1 +1; -1 +1]';
+ActionGlyphs(2, 3, :, :) = [+1 -1; +1 -1]';
+ActionGlyphs(2, 4, :, :) = [+1  0; -1  0]';
+ActionGlyphs(2, 5, :, :) = [+1  0; -1  0]';
+
+drawAction = @(X,Y,A) drawAction(ActionGlyphs, X, Y, A);
+
+MapWidth = 8;
+MapHeight = 8;
+stateFromPos = @(P) (P(1) - 1) + MapWidth * (P(2) - 1) + 1;
+posFromState = @(S) [mod((S - 1),MapWidth) + 1, floor((S - 1)/MapWidth) + 1];
+
+for X = 1:MapWidth;
+    for Y = 1:MapHeight;
+        S = stateFromPos([X, Y]);
+        drawAction(X, Y, StartPolicy(S));
+    end
+end
+
+% Action representation: Idx mapped to dX, dY by this table
+Actions = [
+     0 +1; % N
+     0 -1; % S
+    +1  0; % W
+    -1  0; % E
+]';
 
 %% TODO - visualisation for grid world with walls
 %% TODO - visualisation for policies, showing arrow for direction
