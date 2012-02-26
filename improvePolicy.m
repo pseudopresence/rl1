@@ -1,6 +1,6 @@
 function [Policy] = improvePolicy(StateTransitions, V)
     [NStates NActions] = size(StateTransitions);
-    Policy = zeros([1, NStates]);
+    Policy = zeros([NStates, 1]);
     for S = 1:NStates
         VA = zeros([NActions, 1]);
         for A = 1:NActions;

@@ -118,8 +118,6 @@ for A = 1:NActions
     end
 end
 
-return;
-
 % Policy representation: [State] -> Action
 % from the goal state
 StartPolicy = [
@@ -131,7 +129,7 @@ StartPolicy = [
     1 2 1 1 1 2 1 4 ...
     1 2 3 3 1 1 2 4 ...
     1 2 3 3 1 1 2 4
-];
+]';
 
 % Glyphs for rendering policies
 % TODO make X/Y component the last, the remove the squeeze()
@@ -184,7 +182,46 @@ Policy = StartPolicy;
 MaxPolicyIterations = 1000;
 for PP = 1:MaxPolicyIterations
     % Evaluate policy
-    V = evaluatePolicy(Policy', StateTransitions, reward, Discount, MaxIterations);
+    V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
+
+    % TODO transpose policy to Nx1
+
+    % Compute greedy policy
+    NewPolicy = improvePolicy(StateTransitions, V);
+    if (all(Policy == NewPolicy))
+        break;
+    end
+    Policy = NewPolicy;
+    
+%     V2D = reshape(V, [MapWidth MapHeight])';
+%     V2D = flipdim(V2D, 1);
+%     figure(2);
+%     imagesc(V2D);
+%     axis([0.5, 8.5, 0.5, 8.5]);
+%     axis square;
+
+%     figure(3);
+%     axis([0.5, 8.5, 0.5, 8.5]);
+%     axis square;
+%     drawWalls();
+%     for X = 1:MapWidth;
+%         for Y = 1:MapHeight;
+%             S = stateFromPos([X, Y]);
+%             drawAction(X, Y, Policy(S));
+%         end
+%     end
+    refresh;
+    pause(1);
+end
+fprintf('Iterations before policy convergence: %d\n', PP);
+
+% Value iteration
+Policy = StartPolicy;
+MaxIterations = 1;
+MaxPolicyIterations = 1000;
+for PP = 1:MaxPolicyIterations
+    % Evaluate policy
+    V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
 
     % TODO transpose policy to Nx1
 
@@ -202,21 +239,19 @@ for PP = 1:MaxPolicyIterations
     axis([0.5, 8.5, 0.5, 8.5]);
     axis square;
 
-%     figure(3);
-%     axis([0.5, 8.5, 0.5, 8.5]);
-%     axis square;
-%     drawWalls();
-%     for X = 1:MapWidth;
-%         for Y = 1:MapHeight;
-%             S = stateFromPos([X, Y]);
-%             drawAction(X, Y, Policy(S));
-%         end
-%     end
+    figure(3);
+    axis([0.5, 8.5, 0.5, 8.5]);
+    axis square;
+    drawWalls();
+    for X = 1:MapWidth;
+        for Y = 1:MapHeight;
+            S = stateFromPos([X, Y]);
+            drawAction(X, Y, Policy(S));
+        end
+    end
     refresh;
     pause(1);
 end
 fprintf('Iterations before policy convergence: %d\n', PP);
-
-% TODO ugh
 
 %% Part II - secretary problem, MC, TD (Q-learning)
