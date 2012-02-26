@@ -3,27 +3,30 @@ clear all;
 close all;
 
 %% Setup
-% Action representation: Idx mapped to dX, dY by this table
-Actions = [
-    +1  0; % 1 E >
-     0 -1; % 2 S V
-    -1  0; % 3 W < 
-     0 +1; % 4 N ^
-]';
-NActions = size(Actions, 2);
 
 Rot90 = [
      0 +1;
     -1  0
 ];
 
+% Action representation: Idx mapped to dX, dY by this tablestateFromPos = @(P) sub2ind(MapSize, P(1), P(2));
+Actions = [
+    +1  0; % 1 E >
+     0 -1; % 2 S V
+    -1  0; % 3 W <
+     0 +1; % 4 N ^
+];
+NActions = size(Actions, 1);
+
 MapWidth = 8;
 MapHeight = 8;
-NStates = MapWidth * MapHeight;
-GoalState = 64;
+MapSize = [MapWidth MapHeight];
+NStates = prod(MapSize);
+GoalState = NStates;
 
 stateFromPos = @(P) (P(1) - 1) + MapWidth * (P(2) - 1) + 1;
 posFromState = @(S) [mod((S - 1),MapWidth) + 1, floor((S - 1)/MapWidth) + 1];
+
 
 %% Walls
 % TODO 'vertical' and 'horizontal' are the wrong way around
@@ -57,18 +60,18 @@ drawWalls();
 
 % Compute state transition matrix from walls
 
-Arrow(1, 1, 1, :) = [0.25; 0];
-Arrow(1, 1, 2, :) = [0.75; 0];
-Arrow(1, 2, 1, :) = [0.625; -0.125];
-Arrow(1, 2, 2, :) = [0.75; 0];
-Arrow(1, 3, 1, :) = [0.625; +0.125];
-Arrow(1, 3, 2, :) = [0.75; 0];
+Arrow(1, :, :) = [
+    0.25 0;
+    0.75 0;
+    0.625 -0.125;
+    0.75 0;
+    0.625 +0.125;
+    0.75 0;
+];
 % Rotate for other directions
 for A = 2:4
-    for L = 1:3
-        for I = 1:2
-            Arrow(A,L,I,:) = Rot90^(A-1) * squeeze(Arrow(1,L,I,:));
-        end
+    for L = 1:size(Arrow, 2)
+        Arrow(A,L,:) = Rot90^(A-1) * squeeze(Arrow(1,L,:));
     end
 end
 % [State x Action] -> State
@@ -80,7 +83,7 @@ for A = 1:NActions
         
         X = P(1);
         Y = P(2);
-        NP = Actions(:,A)' + P;
+        NP = Actions(A,:) + P;
         MoveOK = 1;
         
         for W = 1:size(Walls_V, 1)
@@ -109,15 +112,15 @@ for A = 1:NActions
     for S = 1:NStates
         P = posFromState(S);
         if (StateTransitions(S, A) ~= S)
-            drawArrow(Arrow, P, A);
+            % TODO put action index at end...
+            drawGlyph(squeeze(Arrow(A,:,:,:)), P);
         end
     end
 end
 
-%% TODO - finish starting (non-optimal) policy on paper, make into table
+return;
 
 % Policy representation: [State] -> Action
-% Goal state action set to 0 so we get an error trying to take an action
 % from the goal state
 StartPolicy = [
     1 4 4 4 4 4 4 3 ...
@@ -176,18 +179,21 @@ Discount = 1;
 MaxIterations = 1000;
 reward = @(S, A, S2) -1 * (S ~= GoalState);
 
-
-
 Policy = StartPolicy;
 
-for PP = 1:100
+MaxPolicyIterations = 1000;
+for PP = 1:MaxPolicyIterations
     % Evaluate policy
     V = evaluatePolicy(Policy', StateTransitions, reward, Discount, MaxIterations);
 
     % TODO transpose policy to Nx1
 
     % Compute greedy policy
-    Policy = improvePolicy(StateTransitions, V);
+    NewPolicy = improvePolicy(StateTransitions, V);
+    if (all(Policy == NewPolicy))
+        break;
+    end
+    Policy = NewPolicy;
     
     V2D = reshape(V, [MapWidth MapHeight])';
     V2D = flipdim(V2D, 1);
@@ -209,6 +215,7 @@ for PP = 1:100
     refresh;
     pause(1);
 end
+fprintf('Iterations before policy convergence: %d\n', PP);
 
 % TODO ugh
 

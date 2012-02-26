@@ -26,5 +26,5 @@ function [V] = evaluatePolicy(Policy, StateTransitions, Reward, Discount, MaxIte
             break;
         end
     end
-    fprintf('Iterations before convergence: %d\n', Iteration);
+    fprintf('Iterations before value fn convergence: %d\n', Iteration);
 end
