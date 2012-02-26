@@ -172,58 +172,44 @@ end
 
 %% Part I - gridworld, dynamic programming
 
-Policy = StartPolicy;
-V = zeros([NStates, 1]);
-reward = @(S, A, S2) -1 * (S2 ~= GoalState);
-
-% Evaluate policy
-MaxIterations = 1000;
 Discount = 1;
-for Iteration = 1:MaxIterations
-    MaxDelta = 0;
-    NV = zeros([NStates, 1]);
-    for S = 1:NStates
-        A = Policy(S);
-        S2 = StateTransitions(S, A);
-        P = posFromState(S);
-        NV(S) = reward(S, A, S2) + Discount * V(S2);
-        
-        MaxDelta = max(MaxDelta, abs(V(S) - NV(S)));
-        % V(S) = NV;
-    end
-    V = NV;
-    if (MaxDelta < 0.001)
-        fprintf('Iterations before convergence: %d\n', Iteration);
-        break;
-    end
+MaxIterations = 1000;
+reward = @(S, A, S2) -1 * (S ~= GoalState);
+
+
+
+Policy = StartPolicy;
+
+for PP = 1:100
+    % Evaluate policy
+    V = evaluatePolicy(Policy', StateTransitions, reward, Discount, MaxIterations);
+
+    % TODO transpose policy to Nx1
+
+    % Compute greedy policy
+    Policy = improvePolicy(StateTransitions, V);
+    
+    V2D = reshape(V, [MapWidth MapHeight])';
+    V2D = flipdim(V2D, 1);
+    figure(2);
+    imagesc(V2D);
+    axis([0.5, 8.5, 0.5, 8.5]);
+    axis square;
+
+%     figure(3);
+%     axis([0.5, 8.5, 0.5, 8.5]);
+%     axis square;
+%     drawWalls();
+%     for X = 1:MapWidth;
+%         for Y = 1:MapHeight;
+%             S = stateFromPos([X, Y]);
+%             drawAction(X, Y, Policy(S));
+%         end
+%     end
+    refresh;
+    pause(1);
 end
+
 % TODO ugh
-V2D = reshape(V, [MapWidth MapHeight])';
-V2D = flipdim(V2D, 1);
-figure;
-imagesc(V2D);
-
-% Compute greedy policy
-NewPolicy = Policy;
-for S = 1:NStates
-    VA = zeros([NActions, 1]);
-    for A = 1:NActions;
-        S2 = StateTransitions(S, A);
-        VA(A) = V(S2);
-    end
-    [Dummy A] = max(VA);
-    NewPolicy(S) = A;
-end
-
-figure;
-axis([0.5, 8.5, 0.5, 8.5]);
-axis square;
-drawWalls();
-for X = 1:MapWidth;
-    for Y = 1:MapHeight;
-        S = stateFromPos([X, Y]);
-        drawAction(X, Y, NewPolicy(S));
-    end
-end
 
 %% Part II - secretary problem, MC, TD (Q-learning)
