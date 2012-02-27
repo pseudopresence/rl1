@@ -1,13 +1,13 @@
-function [Policy] = improvePolicy(StateTransitions, V)
+function [Policy] = improvePolicy(V, StateTransitions, Reward, Discount)
     [NStates NActions] = size(StateTransitions);
     Policy = zeros([NStates, 1]);
     for S = 1:NStates
-        VA = zeros([NActions, 1]);
+        Q = zeros([NActions, 1]);
         for A = 1:NActions;
             S2 = StateTransitions(S, A);
-            VA(A) = V(S2);
+            Q(A) = Reward(S, A, S2) + Discount * V(S2);
         end
-        [Dummy A] = max(VA);
+        [Dummy A] = max(Q);
         Policy(S) = A;
     end
 end

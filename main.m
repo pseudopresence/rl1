@@ -173,13 +173,12 @@ end
 
 %% Part I - gridworld, dynamic programming
 
-Discount = 1;
-MaxIterations = 1000;
 reward = @(S, A, S2) -1 * (S ~= GoalState);
 
-Policy = StartPolicy;
-
+Discount = 1;
+MaxIterations = 1000;
 MaxPolicyIterations = 1000;
+Policy = StartPolicy;
 for PP = 1:MaxPolicyIterations
     % Evaluate policy
     V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
@@ -187,46 +186,7 @@ for PP = 1:MaxPolicyIterations
     % TODO transpose policy to Nx1
 
     % Compute greedy policy
-    NewPolicy = improvePolicy(StateTransitions, V);
-    if (all(Policy == NewPolicy))
-        break;
-    end
-    Policy = NewPolicy;
-    
-%     V2D = reshape(V, [MapWidth MapHeight])';
-%     V2D = flipdim(V2D, 1);
-%     figure(2);
-%     imagesc(V2D);
-%     axis([0.5, 8.5, 0.5, 8.5]);
-%     axis square;
-
-%     figure(3);
-%     axis([0.5, 8.5, 0.5, 8.5]);
-%     axis square;
-%     drawWalls();
-%     for X = 1:MapWidth;
-%         for Y = 1:MapHeight;
-%             S = stateFromPos([X, Y]);
-%             drawAction(X, Y, Policy(S));
-%         end
-%     end
-    refresh;
-    pause(1);
-end
-fprintf('Iterations before policy convergence: %d\n', PP);
-
-% Value iteration
-Policy = StartPolicy;
-MaxIterations = 1;
-MaxPolicyIterations = 1000;
-for PP = 1:MaxPolicyIterations
-    % Evaluate policy
-    V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
-
-    % TODO transpose policy to Nx1
-
-    % Compute greedy policy
-    NewPolicy = improvePolicy(StateTransitions, V);
+    NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
     if (all(Policy == NewPolicy))
         break;
     end
@@ -239,16 +199,58 @@ for PP = 1:MaxPolicyIterations
     axis([0.5, 8.5, 0.5, 8.5]);
     axis square;
 
-    figure(3);
+%     figure(3);
+%     axis([0.5, 8.5, 0.5, 8.5]);
+%     axis square;
+%     drawWalls();
+%     for X = 1:MapWidth;
+%         for Y = 1:MapHeight;
+%             S = stateFromPos([X, Y]);
+%             drawAction(X, Y, Policy(S));
+%         end
+%     end
+   refresh;
+   pause(1);
+end
+fprintf('Iterations before policy convergence: %d\n', PP);
+%input('Paused...');
+% Value iteration
+Policy = StartPolicy;
+MaxIterations = 1;
+Discount = 1;
+MaxPolicyIterations = 1000;
+V = zeros([NStates 1]);
+for PP = 1:MaxPolicyIterations
+    % Evaluate policy
+    % V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
+
+    % TODO transpose policy to Nx1
+
+    % Compute greedy policy
+    % NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
+    NewV = valueIteration(V, StateTransitions, reward, Discount);
+    if (all(V == NewV))
+        break;
+    end
+    V = NewV;
+    
+    V2D = reshape(V, [MapWidth MapHeight])';
+    V2D = flipdim(V2D, 1);
+    figure(4);
+    imagesc(V2D);
     axis([0.5, 8.5, 0.5, 8.5]);
     axis square;
-    drawWalls();
-    for X = 1:MapWidth;
-        for Y = 1:MapHeight;
-            S = stateFromPos([X, Y]);
-            drawAction(X, Y, Policy(S));
-        end
-    end
+
+%     figure(3);
+%     axis([0.5, 8.5, 0.5, 8.5]);
+%     axis square;
+%     drawWalls();
+%     for X = 1:MapWidth;
+%         for Y = 1:MapHeight;
+%             S = stateFromPos([X, Y]);
+%             drawAction(X, Y, Policy(S));
+%         end
+%     end
     refresh;
     pause(1);
 end
