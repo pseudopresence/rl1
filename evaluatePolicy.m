@@ -2,15 +2,11 @@ function [V] = evaluatePolicy(Policy, StateTransitions, Reward, Discount, MaxIte
     NStates = size(Policy, 1);
     V = zeros([NStates, 1]);
     for Iteration = 1:MaxIterations
-        MaxDelta = 0;
-        for S = 1:NStates
-            A = Policy(S);
-            S2 = StateTransitions(S, A);
-            NV = Reward(S, A, S2) + Discount * V(S2);
-
-            MaxDelta = max(MaxDelta, abs(V(S) - NV));
-            V(S) = NV;
-        end
+        OldV = V;
+        V = evaluatePolicyStep(V, Policy, StateTransitions, Reward, Discount);
+        MaxDelta = max(abs(V - OldV));
+        
+        
 
     %   Vectorised, but slower :/
     %   S = (1:NStates)';

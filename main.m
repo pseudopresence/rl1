@@ -51,13 +51,6 @@ Walls_H = [
     8.5, 0.5, 8.5
 ];
 
-drawWalls = @() drawWalls(Walls_V, Walls_H);
-
-figure;
-axis([0.5, 8.5, 0.5, 8.5]);
-axis square;
-drawWalls();
-
 % Compute state transition matrix from walls
 
 Arrow(1, :, :) = [
@@ -108,16 +101,6 @@ end
 
 StateTransitions(GoalState, :) = repmat(GoalState, [NActions 1]);
 
-for A = 1:NActions
-    for S = 1:NStates
-        P = posFromState(S);
-        if (StateTransitions(S, A) ~= S)
-            % TODO put action index at end...
-            drawGlyph(squeeze(Arrow(A,:,:,:)), P);
-        end
-    end
-end
-
 % Policy representation: [State] -> Action
 % from the goal state
 StartPolicy = [
@@ -153,14 +136,18 @@ ActionGlyphs(2, 5, :, :) = [-1 +1; -1 +1]';
 % Rescale
 ActionGlyphs = 0.25 * ActionGlyphs;
 
-drawAction = @(X,Y,A) drawAction(ActionGlyphs, X, Y, A);
+drawWalls = @() drawWalls(Walls_V, Walls_H);
+drawStateTransitions = @(StateTransitions) drawStateTransitions(Arrow, StateTransitions, posFromState);
+drawPolicy = @(Policy) drawPolicy(ActionGlyphs, Policy, posFromState);
 
-for X = 1:MapWidth;
-    for Y = 1:MapHeight;
-        S = stateFromPos([X, Y]);
-        drawAction(X, Y, StartPolicy(S));
-    end
-end
+figure;
+    drawWalls();
+    drawStateTransitions(StateTransitions);
+    drawPolicy(StartPolicy);
+axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
+
+
+
 
 %% visualisation for grid world with walls
 %% visualisation for policies, showing arrow for direction
@@ -183,8 +170,6 @@ for PP = 1:MaxPolicyIterations
     % Evaluate policy
     V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
 
-    % TODO transpose policy to Nx1
-
     % Compute greedy policy
     NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
     if (all(Policy == NewPolicy))
@@ -192,25 +177,16 @@ for PP = 1:MaxPolicyIterations
     end
     Policy = NewPolicy;
     
-    V2D = reshape(V, [MapWidth MapHeight])';
-    V2D = flipdim(V2D, 1);
     figure(2);
-    imagesc(V2D);
-    axis([0.5, 8.5, 0.5, 8.5]);
-    axis square;
-
-%     figure(3);
-%     axis([0.5, 8.5, 0.5, 8.5]);
-%     axis square;
-%     drawWalls();
-%     for X = 1:MapWidth;
-%         for Y = 1:MapHeight;
-%             S = stateFromPos([X, Y]);
-%             drawAction(X, Y, Policy(S));
-%         end
-%     end
-   refresh;
-   pause(1);
+        V2D = reshape(V, [MapWidth MapHeight]);
+        imagesc(V2D);
+        colormap('gray');
+        drawWalls();
+        drawPolicy(Policy);
+    axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
+    
+    refresh;
+    pause(0.1);
 end
 fprintf('Iterations before policy convergence: %d\n', PP);
 %input('Paused...');
@@ -224,8 +200,6 @@ for PP = 1:MaxPolicyIterations
     % Evaluate policy
     % V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
 
-    % TODO transpose policy to Nx1
-
     % Compute greedy policy
     % NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
     NewV = valueIteration(V, StateTransitions, reward, Discount);
@@ -234,25 +208,18 @@ for PP = 1:MaxPolicyIterations
     end
     V = NewV;
     
-    V2D = reshape(V, [MapWidth MapHeight])';
-    V2D = flipdim(V2D, 1);
-    figure(4);
-    imagesc(V2D);
-    axis([0.5, 8.5, 0.5, 8.5]);
-    axis square;
-
-%     figure(3);
-%     axis([0.5, 8.5, 0.5, 8.5]);
-%     axis square;
-%     drawWalls();
-%     for X = 1:MapWidth;
-%         for Y = 1:MapHeight;
-%             S = stateFromPos([X, Y]);
-%             drawAction(X, Y, Policy(S));
-%         end
-%     end
+    Policy = improvePolicy(V, StateTransitions, reward, Discount);
+    
+    figure(3);
+        V2D = reshape(V, [MapWidth MapHeight]);
+        imagesc(V2D);
+        colormap('gray');
+        drawWalls();
+        drawPolicy(Policy);
+    axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
+    
     refresh;
-    pause(1);
+    pause(0.1);
 end
 fprintf('Iterations before policy convergence: %d\n', PP);
 
