@@ -47,6 +47,9 @@ posFromState = @(S) [mod((S - 1),MapWidth) + 1, floor((S - 1)/MapWidth) + 1];
 
 
 %% Walls
+% TODO merge H and V walls, split doesn't make sense for either rendering
+% or state transition table calculation.
+
 % Horizontal wall representation: Y, StartX, EndX
 Walls_H = [
     0.5, 0.5, 8.5;
@@ -71,7 +74,7 @@ Walls_V = [
 % Compute state transition matrix from walls
 
 % [State x Action] -> State
-StateTransitions = zeros([NStates, NActions]);
+StateTransitionTable = zeros([NStates, NActions]);
 
 for A = 1:NActions
     for S = 1:NStates
@@ -95,14 +98,16 @@ for A = 1:NActions
         end
         
         if (MoveOK)
-            StateTransitions(S, A) = stateFromPos(NP);
+            StateTransitionTable(S, A) = stateFromPos(NP);
         else
-            StateTransitions(S, A) = S;
+            StateTransitionTable(S, A) = S;
         end
     end
 end
 
-StateTransitions(GoalState, :) = repmat(GoalState, [NActions 1]);
+StateTransitionTable(GoalState, :) = repmat(GoalState, [NActions 1]);
+
+NormalStateTransitions = @(S, A) deal(StateTransitionTable(S, A), 1);
 
 % Policy representation: [State] -> Action
 % from the goal state
@@ -161,7 +166,7 @@ drawPolicy = @(Policy) drawPolicy(ActionGlyphs, Policy, posFromState);
 
 figure;
     drawWalls();
-    drawStateTransitions(StateTransitions);
+    drawStateTransitions(StateTransitionTable);
     drawPolicy(StartPolicy);
 axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
 
@@ -178,10 +183,10 @@ MaxPolicyIterations = 1000;
 Policy = StartPolicy;
 for PP = 1:MaxPolicyIterations
     % Evaluate policy
-    V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
+    V = evaluatePolicy(Policy, NormalStateTransitions, reward, Discount, MaxIterations);
 
     % Compute greedy policy
-    NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
+    NewPolicy = improvePolicy(V, NStates, NActions, NormalStateTransitions, reward, Discount);
     if (all(Policy == NewPolicy))
         break;
     end
@@ -194,8 +199,8 @@ for PP = 1:MaxPolicyIterations
         drawPolicy(Policy);
     axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
     
-    refresh;
-    pause(0.1);
+    % refresh;
+    % pause(0.1);
 end
 fprintf('Iterations before policy convergence: %d\n', PP);
 %input('Paused...');
@@ -211,15 +216,48 @@ for PP = 1:MaxPolicyIterations
 
     % Compute greedy policy
     % NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
-    NewV = valueIteration(V, StateTransitions, reward, Discount);
+    NewV = valueIteration(V, NStates, NActions, NormalStateTransitions, reward, Discount);
     if (all(V == NewV))
         break;
     end
     V = NewV;
     
-    Policy = improvePolicy(V, StateTransitions, reward, Discount);
+    Policy = improvePolicy(V, NStates, NActions, NormalStateTransitions, reward, Discount);
     
     figure(3);
+        imagesc(reshape(V, MapSize));
+        colormap('gray');
+        drawWalls();
+        drawPolicy(Policy);
+    axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
+    
+    % refresh;
+    % pause(0.1);
+end
+fprintf('Iterations before policy convergence: %d\n', PP);
+
+% d) Sticky wall
+StickyProb = 0.4;
+
+
+StickyStateTransitions = @(S, A) StickyStateTransitions(posFromState, MapWidth, StickyProb, StateTransitionTable, S, A);
+
+Discount = 1;
+MaxIterations = 1000;
+MaxPolicyIterations = 1000;
+Policy = StartPolicy;
+for PP = 1:MaxPolicyIterations
+    % Evaluate policy
+    V = evaluatePolicy(Policy, StickyStateTransitions, reward, Discount, MaxIterations);
+
+    % Compute greedy policy
+    NewPolicy = improvePolicy(V, NStates, NActions, StickyStateTransitions, reward, Discount);
+    if (all(Policy == NewPolicy))
+        break;
+    end
+    Policy = NewPolicy;
+    
+    figure(4);
         imagesc(reshape(V, MapSize));
         colormap('gray');
         drawWalls();
@@ -230,5 +268,6 @@ for PP = 1:MaxPolicyIterations
     pause(0.1);
 end
 fprintf('Iterations before policy convergence: %d\n', PP);
+
 
 %% Part II - secretary problem, MC, TD (Q-learning)
