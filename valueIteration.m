@@ -4,7 +4,7 @@ function [NV] = valueIteration(V, NStates, NActions, StateTransitions, Reward, D
         Q = zeros([NActions, 1]);
         for A = 1:NActions;
             [S2 Pr] = StateTransitions(S, A);
-            for I = 1:size(S2)
+            for I = 1:size(S2, 2)
                 Q(A) = Q(A) + Pr(I) * (Reward(S, A, S2(I)) + Discount * V(S2(I)));
             end
         end
