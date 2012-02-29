@@ -33,7 +33,7 @@ TotalReturn = zeros([NCandidates, NCandidates, 2]);
 VisitCount = zeros([NCandidates, NCandidates, 2]);
 
 tic;
-MaxEpisodes = 10000;
+MaxEpisodes = 300000;
 for Episode = 1:MaxEpisodes
     % Each episode, we will generate 30 random candidate values
     % Without loss of generality we will interview them in order 1-N
@@ -52,7 +52,10 @@ for Episode = 1:MaxEpisodes
     
     for K = 1:NCandidates
         % Rank of the candidate among those seen so far
-        [Dummy I] = sort(C(1:K));
+        [Dummy I] = sort(C(1:K), 'descend');
+        %I2 = [I' zeros([1, NCandidates - K])];
+        %disp([C'; I2]);
+        %pause(1);
         R = I(K);
         if (K == NCandidates)
             Action = 2;
@@ -77,13 +80,7 @@ for Episode = 1:MaxEpisodes
     end
     
     OldQ = Q;
-    for K = 1:(NCandidates - 1)
-        for R = 1:K
-            for A = 1:2
-                Q(K, R, A) = TotalReturn(K, R, A) / max(VisitCount(K, R, A), 1);
-            end
-        end
-    end
+    Q = TotalReturn ./ max(VisitCount, 1);
     [Dummy, Policy] = max(Q, [], 3);
     
     if max(max(max(abs(Q - OldQ),[],1),[],2),[],3) < 0.00001
@@ -92,12 +89,26 @@ for Episode = 1:MaxEpisodes
     
 %    disp(Episode);
 end
+for K = 1:NCandidates
+    for R = (K+1):NCandidates
+        Policy(K, R) = 0;
+    end
+end
 fprintf('Episodes to convergence: %d\n', Episode);
 toc;
 figure;
-imagesc(Policy);
+imagesc(Policy');
+axis xy;
+xlabel('Step');
+ylabel('Rank');
 figure;
-imagesc(Q(:,:,1));
+imagesc(Q(:,:,1)');
+axis xy;
+xlabel('Step');
+ylabel('Rank');
 figure;
-imagesc(Q(:,:,2));
+imagesc(Q(:,:,2)');
+axis xy;
+xlabel('Step');
+ylabel('Rank');
 end
