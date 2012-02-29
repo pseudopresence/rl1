@@ -33,7 +33,7 @@ TotalReturn = zeros([NCandidates, NCandidates, 2]);
 VisitCount = zeros([NCandidates, NCandidates, 2]);
 
 tic;
-MaxEpisodes = 300000;
+MaxEpisodes = 10000000;
 for Episode = 1:MaxEpisodes
     % Each episode, we will generate 30 random candidate values
     % Without loss of generality we will interview them in order 1-N
@@ -48,15 +48,42 @@ for Episode = 1:MaxEpisodes
     % states.
     % Similarly we know the sequence of actions taken based on the length
     % of this sequence.
-    Rs = [];
+    Rs = zeros([1 NCandidates]);
+    
+    SortedSoFar = zeros([1 NCandidates]);
     
     for K = 1:NCandidates
         % Rank of the candidate among those seen so far
-        [Dummy I] = sort(C(1:K), 'descend');
-        %I2 = [I' zeros([1, NCandidates - K])];
+        R = K;
+        if K > 1
+            for I = (K-1):-1:1
+                if SortedSoFar(I) < C(K)
+                    SortedSoFar(I + 1) = SortedSoFar(I);
+                    R = R - 1;
+                else
+                    break;
+                end
+            end
+        end
+        SortedSoFar(R) = C(K);
+        
+        %disp(SortedSoFar);
+        %disp([K R]);
+        %pause(1);
+%         CS = C(1:K);
+%         [Dummy I] = sort(CS, 'descend');
+%         Idx = 1:K;
+%         Idx = Idx(I);
+%         I2 = [I' zeros([1, NCandidates - K])];
+%         R2 = Idx(K);
+%         if (R ~= R2)
+%             disp(SortedSoFar);
+%             disp([K R]);
+%             pause(1);
+%         end
         %disp([C'; I2]);
         %pause(1);
-        R = I(K);
+        
         if (K == NCandidates)
             Action = 2;
         elseif (rand(1) < Epsilon)
@@ -64,17 +91,17 @@ for Episode = 1:MaxEpisodes
         else
             Action = Policy(K, R);
         end
-        Rs = [Rs R];
+        Rs(K) = R;
         if Action == 2
             break;
         end
     end
-    
+    MaxK = K;
     Reward = C(K);
-    for K = 1:size(Rs, 2)
+    for K = 1:MaxK
         % disp([K Rs(K)]);
         % pause(1);
-        A = (K == size(Rs, 2)) + 1;
+        A = (K == MaxK) + 1;
         VisitCount(K, Rs(K), A) = VisitCount(K, Rs(K), A) + 1;
         TotalReturn(K, Rs(K), A) = TotalReturn(K, Rs(K), A) + Reward;
     end
@@ -83,9 +110,9 @@ for Episode = 1:MaxEpisodes
     Q = TotalReturn ./ max(VisitCount, 1);
     [Dummy, Policy] = max(Q, [], 3);
     
-    if max(max(max(abs(Q - OldQ),[],1),[],2),[],3) < 0.00001
+    %if max(max(max(abs(Q - OldQ),[],1),[],2),[],3) < 0.00001
     %    break;
-    end
+    %end
     
 %    disp(Episode);
 end
