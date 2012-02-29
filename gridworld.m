@@ -313,4 +313,5 @@ MaxValueIterations = 1000;
 MaxPolicyIterations = 1000;
 policyIteration(4, StartPolicy, Discount, @stickyStateTransitions, MaxValueIterations, MaxPolicyIterations);
 
+valueIteration(5, Discount, @stickyStateTransitions, MaxPolicyIterations);
 end
