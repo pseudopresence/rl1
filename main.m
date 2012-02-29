@@ -212,17 +212,18 @@ MaxPolicyIterations = 1000;
 V = zeros([NStates 1]);
 for PP = 1:MaxPolicyIterations
     % Evaluate policy
-    % V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxIterations);
-
-    % Compute greedy policy
-    % NewPolicy = improvePolicy(V, StateTransitions, reward, Discount);
+    
+    % TODO why does 1-step evaluation not give the same result?
+    % NewV = evaluatePolicy(Policy, NormalStateTransitions, reward, Discount, MaxIterations);
     NewV = valueIteration(V, NStates, NActions, NormalStateTransitions, reward, Discount);
+     
+    % Compute greedy policy
+    Policy = improvePolicy(NewV, NStates, NActions, NormalStateTransitions, reward, Discount);
+    
     if (all(V == NewV))
         break;
     end
     V = NewV;
-    
-    Policy = improvePolicy(V, NStates, NActions, NormalStateTransitions, reward, Discount);
     
     figure(3);
         imagesc(reshape(V, MapSize));
@@ -269,5 +270,10 @@ for PP = 1:MaxPolicyIterations
 end
 fprintf('Iterations before policy convergence: %d\n', PP);
 
+% TODO value iteration, different values of sticky probability
 
 %% Part II - secretary problem, MC, TD (Q-learning)
+
+secretary_MDP_MC();
+
+
