@@ -25,7 +25,7 @@ NCandidates = 30;
 % For the on-policy monte-carlo implementation we will learn the Q(S, A)
 % function using an e-greedy strategy.
 
-Epsilon = 0.1;
+Epsilon = 0.01;
 
 Q = zeros([NCandidates, NCandidates, 2]);
 Policy = zeros([NCandidates, NCandidates]);
@@ -33,7 +33,7 @@ TotalReturn = zeros([NCandidates, NCandidates, 2]);
 VisitCount = zeros([NCandidates, NCandidates, 2]);
 
 tic;
-MaxEpisodes = 10000000;
+MaxEpisodes = 1000000;
 for Episode = 1:MaxEpisodes
     % Each episode, we will generate 30 random candidate values
     % Without loss of generality we will interview them in order 1-N
@@ -106,8 +106,8 @@ for Episode = 1:MaxEpisodes
         TotalReturn(K, Rs(K), A) = TotalReturn(K, Rs(K), A) + Reward;
     end
     
-    OldQ = Q;
-    Q = TotalReturn ./ max(VisitCount, 1);
+    VC = max(VisitCount, 1);
+    Q = TotalReturn ./ VC;
     [Dummy, Policy] = max(Q, [], 3);
     
     %if max(max(max(abs(Q - OldQ),[],1),[],2),[],3) < 0.00001
