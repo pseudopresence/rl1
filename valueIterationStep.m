@@ -1,4 +1,4 @@
-function [NV] = valueIteration(V, NStates, NActions, StateTransitions, Reward, Discount)
+function [NV] = valueIterationStep(V, NStates, NActions, StateTransitions, Reward, Discount)
     NV = zeros([NStates, 1]);
     for S = 1:NStates
         Q = zeros([NActions, 1]);

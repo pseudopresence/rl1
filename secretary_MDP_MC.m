@@ -94,9 +94,9 @@ for Episode = 1:MaxEpisodes
         Policy(K, R) = (Q(K, R, 1) < Q(K, R, 2)) + 1;
     end
     
-    % VC = max(VisitCount, 1);
-    % Q = TotalReturn ./ VC;
-    % [Dummy, Policy] = max(Q, [], 3);
+    if (mod(Episode, 10000) == 0)
+        fprintf('Episode %d (%03d%%)\n', Episode, floor(100*Episode/MaxEpisodes));
+    end
 end
 for K = 1:NCandidates
     for R = (K+1):NCandidates

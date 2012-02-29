@@ -1,11 +1,11 @@
-function [] = drawStateTransitions(Arrow, StateTransitions, posFromState)
+function [] = drawStateTransitionsImpl(Arrow, StateTransitions, posFromState)
     [NStates NActions] = size(StateTransitions);
     for A = 1:NActions
         for S = 1:NStates
             P = posFromState(S);
             if (StateTransitions(S, A) ~= S)
                 % TODO put action index at end...
-                drawGlyph(squeeze(Arrow(A,:,:,:)), P);
+                drawGlyphImpl(squeeze(Arrow(A,:,:,:)), P);
             end
         end
     end
