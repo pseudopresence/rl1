@@ -1,0 +1,801 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage[usenames,dvipsnames]{color}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter beramono
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+RL Homework 1
+\end_layout
+
+\begin_layout Author
+Chris Swetenham (s1149322)
+\end_layout
+
+\begin_layout Date
+March 1, 2012
+\end_layout
+
+\begin_layout Section
+Grid World Navigation
+\end_layout
+
+\begin_layout Standard
+We are supplied a description of an 8 by 8 grid world with walls.
+ Actions are movement in the 4 cardinal directions.
+ The start state is at bottom left and the goal state is in the top right.
+ We formulate this as an MDP with a state for each coordinate on the grid,
+ represented by a single integer.
+ We calculate possible state transitions based on the wall definitions.
+ We make the goal state a terminal state.
+ The reward is 0 when we are in the goal state, -1 otherwise.
+ We use a deterministic policy.
+ For policy iteration, we fill in a starting policy which is non-optimal:
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename StartingPolicy.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Starting Policy and State Transitions
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "part1.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={part1.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+a) Policy Evaluation
+\end_layout
+
+\begin_layout Standard
+We represent state transition probabilities 
+\begin_inset Formula $\mathcal{P}_{ss'}^{a}$
+\end_inset
+
+ as a MATLAB function which takes the current state and the action, and
+ returns a list of possible next states and a list of their probabilities.
+ We implement policy evaluation by stepping through these states in a single-ste
+p backup, and repeat this until the change in the state value function is
+ sufficiently small.
+ For the starting policy, our evaluation converges after 23 steps.
+ We implement policy improvement by finding the greedy policy for the value
+ function by searching in each state for the action which maximises the
+ expected return.
+ Figure 2 shows the resulting value function and greedy policy.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename PolicyEvaluation.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Value function and Greedy Policy
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "part1a.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={part1a.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+b) Policy Iteration
+\end_layout
+
+\begin_layout Standard
+We interleave policy evaluation and policy improvement until the policy
+ remains unchanged.
+ This converges after 9 iterations of policy iteration.
+ The resulting policy by manual inspection seems to correctly take the shortest
+ path to the goal.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename NormalPolicyIteration.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Optimal Value Function and Policy - Policy Iteration
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "part1b.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={part1b.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+c) Value Iteration
+\end_layout
+
+\begin_layout Standard
+We now use value iteration to directly compute the value of each state as
+ the value of the action which maximises the expected value of the successor
+ state.
+ We repeat this until the value of each state remains the same.
+ This takes 15 iterations to converge.
+ We compute the greedy policy for the value function as before, this time
+ only to visualise it.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename NormalValueIteration.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Optimal Value Function and Policy - Value Iteration
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "part1c.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={part1c.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+d) Sticky Walls
+\end_layout
+
+\begin_layout Standard
+We now introduce a sticky right wall.
+ When in one of the states in the rightmost column, there is a probability
+ 
+\begin_inset Formula $p$
+\end_inset
+
+ that we will stay in the current state no matter which action was taken.
+ We use a new state transition function which returns the current state
+ with probability 
+\begin_inset Formula $p$
+\end_inset
+
+, and run the previous policy iteration and value iteration code.
+ We start with 
+\begin_inset Formula $p=0.4$
+\end_inset
+
+ and also compare with 
+\begin_inset Formula $p=0.6$
+\end_inset
+
+.
+ For states next to the wall and far from the goal, it becomes worthwhile
+ to step away from the wall incurring a -1 penalty rather than try to stay
+ near the wall; even more so in the case where 
+\begin_inset Formula $p=0.6$
+\end_inset
+
+.
+ In the policy iteration case, the number of policy iterations required
+ for convergence is still 9, but the value function requires up to 32 steps
+ to converge each iteration.
+ In the value iteration case, the value function now takes 52 iterations
+ to converge, many more than the 15 seen previously.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename StickyPolicyIteration.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Stick Walls - Policy Iteration
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename StickyValueIteration.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Stick Walls - Value Iteration
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename StickyPolicyIteration6.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Stick Walls - Policy Iteration, 
+\begin_inset Formula $p=0.6$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "part1d.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={part1d.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\begin_inset Newpage clearpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Secretary Problem
+\end_layout
+
+\begin_layout Subsection*
+a) MDP Design
+\end_layout
+
+\begin_layout Standard
+We specify the problem as an MDP as follows:
+\end_layout
+
+\begin_layout Standard
+States: On step 
+\begin_inset Formula $K$
+\end_inset
+
+, we have rejected the first 
+\begin_inset Formula $K-1$
+\end_inset
+
+ applicants, and we observe the ranking 
+\begin_inset Formula $R$
+\end_inset
+
+ of the 
+\begin_inset Formula $K$
+\end_inset
+
+th candidate relative to them.
+ There are 
+\begin_inset Formula $K$
+\end_inset
+
+ such possible rankings, positions 
+\begin_inset Formula $1$
+\end_inset
+
+ to 
+\begin_inset Formula $K$
+\end_inset
+
+.
+ The rankings of the rejected candidates among themselves is irrelevant.
+ In MATLAB we represent these states in a triangular matrix.
+ In the MATLAB code we will represent the state by the values 
+\begin_inset Formula $K$
+\end_inset
+
+ and 
+\begin_inset Formula $R$
+\end_inset
+
+ and functions of those states as tables indexed by 
+\begin_inset Formula $K$
+\end_inset
+
+ and 
+\begin_inset Formula $R$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Terminal states: All states after the Accept action.
+ We do not represent these states explicitly in the MATLAB code.
+\end_layout
+
+\begin_layout Standard
+Actions: Accept or Reject.
+ On the 30th step we can only Accept.
+ Represented as 
+\begin_inset Formula $2$
+\end_inset
+
+ and 
+\begin_inset Formula $1$
+\end_inset
+
+ in the MATLAB code.
+\end_layout
+
+\begin_layout Standard
+The total number of non-terminal states is 
+\begin_inset Formula $1+2+...+30=\frac{1}{2}N(N+1)=465$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Reward: We assign to each candidate a random value 
+\begin_inset Formula $0-1$
+\end_inset
+
+ according to which they are ranked.
+ The reward is the value of the accepted candidate on entering the terminal
+ state, 
+\begin_inset Formula $0$
+\end_inset
+
+ otherwise.
+\end_layout
+
+\begin_layout Subsection*
+b) Monte Carlo
+\end_layout
+
+\begin_layout Standard
+We simulate 25 million episodes.
+ Each episode we generate random values for the candidates and step through
+ them in order.
+ We use an 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-greedy on-policy monte-carlo algorithm with 
+\begin_inset Formula $\epsilon=0.1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Each step we insert our new candidate into a sorted list and thus determine
+ the candidate's rank.
+ We take the action specified by the 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+-greedy policy, and record the sequence of states we visit in the episode.
+ The sequence of 
+\begin_inset Formula $R$
+\end_inset
+
+s visited and its length is sufficent to determine the sequence of states
+ and actions taken.
+ At the end of the episode, we use this list to update our estimate of 
+\begin_inset Formula $Q$
+\end_inset
+
+ and our greedy policy for the visited states.
+ We compute the state-value function 
+\begin_inset Formula $V$
+\end_inset
+
+ from 
+\begin_inset Formula $Q$
+\end_inset
+
+ for visualisation.
+\end_layout
+
+\begin_layout Standard
+There is no strict convergence test for MC so we empirically detemined 25
+ million episodes as giving stable results.
+ After 10 minutes of computation we converge on the following policy, seen
+ in Figure 8.
+ The white area indicates Accept actions.
+ 1 is the highest rank.
+ Right at the start we always reject.
+ A little later we will only accept someone ranked very high.
+ Right before the end, we will accept anyone above average since on the
+ final step we have to accept and expect an average applicant value (
+\begin_inset Formula $0.5$
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename SecretaryMDPPolicy.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+Policy after 25 million iterations
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename SecretaryMDPVFunction.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption
+
+\begin_layout Plain Layout
+State value function after 25 million iterations
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "part2b.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={part2b.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+c) Q-Learning
+\end_layout
+
+\begin_layout Standard
+TODO
+\end_layout
+
+\begin_layout Section*
+Appendix A - Additional Code
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "writeFigurePDF.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={writeFigurePDF.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\begin_inset VSpace defskip
+\end_inset
+
+
+\begin_inset CommandInset include
+LatexCommand lstinputlisting
+filename "makeLogFile.m"
+lstparams "basicstyle={\\scriptsize\\ttfamily},breaklines=true,caption={makeLogFile.m},captionpos=b,commentstyle={\\color{OliveGreen}},frame=tb,language=Matlab"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

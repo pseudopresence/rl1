@@ -211,6 +211,8 @@ figure(1);
     drawPolicy(StartPolicy);
 axis([0.5, 8.5, 0.5, 8.5], 'xy', 'square');
 
+writeFigurePDF('StartingPolicy.pdf');
+
 reward = @(S, A, S2) -1 * (S ~= GoalState);
 
 %% We implement state transition probabilities PP(a, s, s') as a function
@@ -219,9 +221,34 @@ reward = @(S, A, S2) -1 * (S ~= GoalState);
 
 NormalStateTransitions = @(S, A) deal(StateTransitionTable(S, A), 1);
 
-%% Policy iteration
+%% Policy evaluation
+function [V] = evaluatePolicyStep(V, Policy, StateTransitions, Reward, Discount)
+    for S = 1:NStates
+        A = Policy(S);
+        [S2 Pr] = StateTransitions(S, A);
+        NV = 0;
+        for I = 1:size(S2, 2)
+            NV = NV + Pr(I) * (Reward(S, A, S2(I)) + Discount * V(S2(I)));
+        end
+        V(S) = NV;
+    end
+end
 
-function [Policy] = computeGreedyPolicy(V, NStates, NActions, StateTransitions, Reward, Discount)
+function [V] = evaluatePolicy(Policy, StateTransitions, Reward, Discount, MaxIterations)
+    V = zeros([NStates, 1]);
+    for Iteration = 1:MaxIterations
+        OldV = V;
+        V = evaluatePolicyStep(V, Policy, StateTransitions, Reward, Discount);
+        MaxDelta = max(abs(V - OldV));
+
+        if (MaxDelta < 0.001)
+            break;
+        end
+    end
+    fprintf('Iterations before value fn convergence: %d\n', Iteration);
+end
+
+function [Policy] = computeGreedyPolicy(V, StateTransitions, Reward, Discount)
     Policy = zeros([NStates, 1]);
     for S = 1:NStates
         Q = zeros([NActions, 1]);
@@ -236,13 +263,23 @@ function [Policy] = computeGreedyPolicy(V, NStates, NActions, StateTransitions, 
     end
 end
 
+fprintf('Policy evaluation\n');
+Discount = 1;
+MaxIterations = 1000;
+V = evaluatePolicy(StartPolicy, NormalStateTransitions, reward, Discount, MaxIterations);
+Policy = computeGreedyPolicy(V, NormalStateTransitions, reward, Discount);
+vizPolicy(2, V, Policy);
+writeFigurePDF('PolicyEvaluation.pdf');
+
+%% Policy iteration
+
 function policyIteration(Fig, Policy, Discount, StateTransitions, MaxValueIterations, MaxPolicyIterations)
     for PP = 1:MaxPolicyIterations
         % Evaluate policy
         V = evaluatePolicy(Policy, StateTransitions, reward, Discount, MaxValueIterations);
 
         % Compute greedy policy
-        NewPolicy = computeGreedyPolicy(V, NStates, NActions, StateTransitions, reward, Discount);
+        NewPolicy = computeGreedyPolicy(V, StateTransitions, reward, Discount);
         if (all(Policy == NewPolicy))
             break;
         end
@@ -255,14 +292,29 @@ function policyIteration(Fig, Policy, Discount, StateTransitions, MaxValueIterat
     end
     fprintf('Policy Iteration: Iterations before policy convergence: %d\n', PP);
 end
-
+fprintf('Policy iteration\n');
 Discount = 1;
 MaxValueIterations = 1000;
 MaxPolicyIterations = 1000;
-policyIteration(2, StartPolicy, Discount, NormalStateTransitions, MaxValueIterations, MaxPolicyIterations);
-
+policyIteration(3, StartPolicy, Discount, NormalStateTransitions, MaxValueIterations, MaxPolicyIterations);
+writeFigurePDF('NormalPolicyIteration.pdf');
 
 %% Value iteration
+
+function [NV] = valueIterationStep(V, StateTransitions, Reward, Discount)
+    NV = zeros([NStates, 1]);
+    for S = 1:NStates
+        Q = zeros([NActions, 1]);
+        for A = 1:NActions;
+            [S2 Pr] = StateTransitions(S, A);
+            for I = 1:size(S2, 2)
+                Q(A) = Q(A) + Pr(I) * (Reward(S, A, S2(I)) + Discount * V(S2(I)));
+            end
+        end
+        [V2 Dummy] = max(Q);
+        NV(S) = V2;
+    end
+end
 
 function valueIteration(Fig, Discount, StateTransitions, MaxPolicyIterations)
     V = zeros([NStates 1]);
@@ -271,10 +323,10 @@ function valueIteration(Fig, Discount, StateTransitions, MaxPolicyIterations)
 
         % TODO why does 1-step evaluation not give the same result?
         % NewV = evaluatePolicy(Policy, NormalStateTransitions, reward, Discount, MaxIterations);
-        NewV = valueIterationStep(V, NStates, NActions, StateTransitions, reward, Discount);
+        NewV = valueIterationStep(V, StateTransitions, reward, Discount);
 
         % Compute greedy policy
-        Policy = computeGreedyPolicy(NewV, NStates, NActions, StateTransitions, reward, Discount);
+        Policy = computeGreedyPolicy(NewV, StateTransitions, reward, Discount);
 
         if (all(V == NewV))
             break;
@@ -288,12 +340,13 @@ function valueIteration(Fig, Discount, StateTransitions, MaxPolicyIterations)
     end
     fprintf('Value Iteration: Iterations before policy convergence: %d\n', PP);
 end
-
+fprintf('Value iteration\n');
 Discount = 1;
 MaxPolicyIterations = 1000;
-valueIteration(3, Discount, NormalStateTransitions, MaxPolicyIterations);
+valueIteration(4, Discount, NormalStateTransitions, MaxPolicyIterations);
+writeFigurePDF('NormalValueIteration.pdf');
 
-% d) Sticky wall
+% Sticky wall
 StickyProb = 0.4;
 
 function [S2 Pr] = stickyStateTransitions(S, A)
@@ -311,7 +364,15 @@ end
 Discount = 1;
 MaxValueIterations = 1000;
 MaxPolicyIterations = 1000;
-policyIteration(4, StartPolicy, Discount, @stickyStateTransitions, MaxValueIterations, MaxPolicyIterations);
+fprintf('Sticky world policy iteration\n');
+policyIteration(5, StartPolicy, Discount, @stickyStateTransitions, MaxValueIterations, MaxPolicyIterations);
+writeFigurePDF('StickyPolicyIteration.pdf')
+fprintf('Sticky world value iteration\n');
+valueIteration(6, Discount, @stickyStateTransitions, MaxPolicyIterations);
+writeFigurePDF('StickyValueIteration.pdf');
 
-valueIteration(5, Discount, @stickyStateTransitions, MaxPolicyIterations);
+StickyProb = 0.6;
+fprintf('Sticky world policy iteration - p = 0.6\n');
+policyIteration(7, StartPolicy, Discount, @stickyStateTransitions, MaxValueIterations, MaxPolicyIterations);
+writeFigurePDF('StickyPolicyIteration6.pdf');
 end

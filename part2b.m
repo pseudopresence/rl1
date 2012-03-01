@@ -1,25 +1,3 @@
-function secretary_MDP_MC()
-
-% Formulation as a Markov Decision Process
-% Actions: Accept, Reject. On 30th step can only Accept.
-% Represented as 2, 1.
-% States: On step K, we have rejected the first K-1 applicants, and we
-% observe the ranking of the Kth candidate relative to them. There are K
-% such possible rankings: they can be in position 1 to K. The rankings of
-% the rejected candidates among themselves is irrelevant.
-
-% Terminal States: All states after Accept action.
-
-% Total number of states is 1 + 2 + ... + 30 + Terminal state
-% = 1/2 N(N + 1) + 1 = 466.
-
-% Reward: We assign to each candidate a random value 0-1 according to which
-% they are ranked. The reward is the value of the accepted candidate on
-% entering a terminal state, 0 otherwise.
-
-% We will represent the state by a pair of integers, K in the range 1:N and
-% R in the range 1:K.
-
 NCandidates = 30;
 
 % For the on-policy monte-carlo implementation we will learn the Q(S, A)
@@ -111,7 +89,7 @@ axis square;
 xlabel('Step');
 ylabel('Rank');
 colormap('gray');
-% writeFigurePDF('SecretaryMDPPolicy.pdf');
+writeFigurePDF('SecretaryMDPPolicy.pdf');
 figure;
 imagesc(Q(:,:,1)');
 axis xy;
@@ -119,7 +97,7 @@ axis square;
 xlabel('Step');
 ylabel('Rank');
 colormap('gray');
-% writeFigurePDF('SecretaryMDPQFunction.pdf');
+writeFigurePDF('SecretaryMDPQFunction.pdf');
 figure;
 [VG, Dummy] = max(Q, [], 3);
 VE = 0.5 * sum(Q, 3);
@@ -130,5 +108,5 @@ axis square;
 xlabel('Step');
 ylabel('Rank');
 colormap('gray');
-% writeFigurePDF('SecretaryMDPVFunction.pdf');
+writeFigurePDF('SecretaryMDPVFunction.pdf');
 end
